@@ -11,17 +11,18 @@ dump() {
   rm -rf $WORKDIR/*
 
   log "Dumping certificates"
-  traefik-certs-dumper file --version v2 --crt-name "cert" --crt-ext ".pem" --key-name "key" --key-ext ".pem" --domain-subdir --dest /tmp/work --source /traefik/acme.json >/dev/null
+  traefik-certs-dumper file --version v2 --crt-name ${DOMAIN} --crt-ext ".crt" --key-name ${DOMAIN} --key-ext ".key" --domain-subdir --dest /tmp/work --source /traefik/acme.json >/dev/null
 
   if
-    [[ -f /tmp/work/${DOMAIN}/cert.pem && -f /tmp/work/${DOMAIN}/key.pem && -f /output/cert.pem && -f /output/key.pem ]] && \
-    diff -q ${WORKDIR}/${DOMAIN}/cert.pem /output/cert.pem >/dev/null && \
-    diff -q ${WORKDIR}/${DOMAIN}/key.pem /output/key.pem >/dev/null
+    [[ -f /tmp/work/${DOMAIN}/${DOMAIN}.crt && -f /tmp/work/${DOMAIN}/${DOMAIN}.key && -f /output/${DOMAIN}.crt && -f /output/${DOMAIN}.key ]] && \
+    diff -q ${WORKDIR}/${DOMAIN}/${DOMAIN}.crt /output/${DOMAIN}.crt >/dev/null && \
+    diff -q ${WORKDIR}/${DOMAIN}/${DOMAIN}.key /output/${DOMAIN}.key >/dev/null
   then
     log "Certificate and key still up to date, doing nothing"
   else
     log "Certificate or key differ, updating"
-    mv ${WORKDIR}/${DOMAIN}/*.pem /output/
+    mv ${WORKDIR}/${DOMAIN}/${DOMAIN}.crt /output/${DOMAIN}.crt
+    mv ${WORKDIR}/${DOMAIN}/${DOMAIN}.key /output/${DOMAIN}.key
 
     if [ ! -z "${CONTAINERS#}" ]; then
       log "Trying to restart containers"
